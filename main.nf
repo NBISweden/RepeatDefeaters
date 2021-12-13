@@ -14,6 +14,7 @@ include { PFAM_SCAN
 include { ANNOTATE_REPEATS                                    } from './modules/custom/annotate_repeats'
 include { BLASTN as TREP_BLASTN ;
           BLASTN as RECIPROCAL_BLASTN                         } from './modules/custom/blastn'
+include { ADD_TREP_ANNOTATION                                 } from './modules/custom/add_trep_annotation'
 include { REANNOTATE_REPEATS                                  } from './modules/custom/reannotate_repeats'
 include { REDUNDANT_HITS                                      } from './modules/custom/redundant_hits'
 
