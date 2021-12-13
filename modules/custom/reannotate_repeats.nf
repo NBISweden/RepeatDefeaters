@@ -10,7 +10,7 @@ process REANNOTATE_REPEATS {
     path pfam_table                // Pfam output (*.pfamtbl)
 
     output:
-    path "*", emit: annotation
+    path "*.fasta", emit: fasta
 
     script:
     """
