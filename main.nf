@@ -154,7 +154,7 @@ workflow {
         // Report: Record software versions
         versions_ch.mix(
             RENAME_REPEAT_MODELER_SEQUENCES.out.versions.first(),
-            MAKE_BLAST_DB.out.versions.first(),
+            BUILD_PROTEIN_REF_BLAST_DB.out.versions.first(),
             BLASTX_AND_FILTER.out.versions.first(),
             PFAM_SCAN.out.versions.first(),
             ANNOTATE_REPEATS.out.versions.first()
