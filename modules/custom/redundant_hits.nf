@@ -6,7 +6,7 @@ process REDUNDANT_HITS {
         'biocontainers/biocontainers:v1.2.0_cv1' }"
 
     input:
-    blast_tsv
+    path blast_tsv
 
     output:
     path "*.tsv", emit: tsv
