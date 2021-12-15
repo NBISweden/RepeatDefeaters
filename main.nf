@@ -107,7 +107,12 @@ workflow {
         )
 
         // Step 6: TREP Annotation
-        BUILD_TREP_BLAST_DB ( params.trep_db )
+        BUILD_TREP_BLAST_DB (
+            Channel.fromPath( params.trep_db, checkIfExists: true )
+            .splitFasta(by: 1000000000)   // Auto unzip and keep files fasta intact
+            .collectFile(                 // Merge multiple fasta's into one
+                name: 'trep_db.fasta'
+            ) )
         TREP_BLASTN ( ANNOTATE_REPEATS.out.fasta, BUILD_TREP_BLAST_DB.out.db )
         ADD_TREP_ANNOTATION ( ANNOTATE_REPEATS.out.fasta, TREP_BLASTN.out.tsv ) // take Smallest e-value and rename with triplet added
 
