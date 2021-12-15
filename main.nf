@@ -9,8 +9,8 @@ include { MAKE_BLAST_DB as BUILD_PROTEIN_REF_BLAST_DB ;
           MAKE_BLAST_DB as BUILD_TREP_BLAST_DB ;
           MAKE_BLAST_DB as BUILD_ANNOTATED_LIB_BLAST_DB       } from './modules/custom/make_blast_db'
 include { BLASTX_AND_FILTER                                   } from './modules/custom/blastx_and_filter'
-include { PFAM_SCAN
-          PFAM_SCAN as CUSTOM_HMM_SCAN                        } from './modules/custom/pfam_scan'
+include { PFAM_SCAN                                           } from './modules/custom/pfam_scan'
+include { HMMSCAN as CUSTOM_HMM_SCAN                          } from './modules/custom/hmmscan'
 include { ANNOTATE_REPEATS                                    } from './modules/custom/annotate_repeats'
 include { BLASTN as TREP_BLASTN ;
           BLASTN as RECIPROCAL_BLASTN                         } from './modules/custom/blastn'
