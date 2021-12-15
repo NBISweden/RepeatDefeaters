@@ -67,7 +67,7 @@ workflow {
                 )
             )
             protein_te_domain_list = PFAM_TRANSPOSIBLE_ELEMENT_SEARCH.out.te_domain_proteins
-            versions_ch = PFAM_TRANSPOSIBLE_ELEMENT_SEARCH.out.versions
+            versions_ch = PFAM_TRANSPOSIBLE_ELEMENT_SEARCH.out.versions.first()
         }
 
         // Step 3: Strand specific Blast search of Repeats against
