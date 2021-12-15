@@ -34,7 +34,7 @@ process HMMSCAN {
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
-        hmmscan: $( hmmscan -h | sed '2 !d;s/[^0-9]*\\(\\([0-9]\\.\\)\\{0,4\\}[0-9][^.]\\).*/\\1/' )
+        hmmscan: \$( hmmscan -h | sed '2 !d;s/[^0-9]*\\(\\([0-9]\\.\\)\\{0,4\\}[0-9][^.]\\).*/\\1/' )
     END_VERSIONS
     """
 
