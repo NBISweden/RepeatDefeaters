@@ -25,7 +25,7 @@ process HMMSCAN {
     find HMM_DB -name "*.hmm" -exec hmmpress {} \\;
 
     hmmscan $args \\
-        -cpu $task.cpus \\
+        --cpu $task.cpus \\
         --pfamtblout ${prefix}.pfamtbl \\
         --tblout ${prefix}.tbl \\
         -o ${prefix}.hmmscan.out \\
