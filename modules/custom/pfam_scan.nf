@@ -21,8 +21,8 @@ process PFAM_SCAN {
     mkdir -p HMM_DB
     printf "%s\\n" $hmm_db | \\
         xargs -P $task.cpus -I {} \\
-        sh -c 'gzip -cdf {} > HMM/\$( basename {} .gz )'
-    find . -name "*.hmm" -exec hmmpress {} \\;
+        sh -c 'gzip -cdf {} > HMM_DB/\$( basename {} .gz )'
+    find HMM_DB -name "*.hmm" -exec hmmpress {} \\;
 
     pfam_scan.pl \\
         -fasta $fasta \\
