@@ -6,7 +6,7 @@ process BLASTN {
         'quay.io/biocontainers/blast:2.10.1--pl526he19e7b1_3' }"
 
     input:
-    val query
+    path query
     path db
 
     output:
