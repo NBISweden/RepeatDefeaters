@@ -26,7 +26,7 @@ NBIS support 5861
 """)
 
 // Check a project allocation is given for running on Uppmax clusters.
-if(workflow.profile == "uppmax" && !params.project){
+if( workflow.profile == "uppmax" && !params.project ){
     exit 1, "Please provide a SNIC project number ( --project )!\n"
 }
 
@@ -36,7 +36,7 @@ workflow {
     main:
         // Step 1: Change Fasta headers
         RENAME_REPEAT_MODELER_SEQUENCES (
-            file(
+            file (
                 params.repeat_modeler_fasta,
                 checkIfExists: true
             ),
@@ -47,17 +47,17 @@ workflow {
         // Step 2: Get ID's of PFAM Proteins with TE domains
         protein_te_domain_list = Channel.empty()
         if ( params.pfam_proteins_with_te_domain_list ){
-            protein_te_domain_list = file(
+            protein_te_domain_list = file (
                 params.pfam_proteins_with_te_domain_list,
                 checkIfExists: true
             )
         } else {
             PFAM_TRANSPOSIBLE_ELEMENT_SEARCH (
-                file(
+                file (
                     params.pfam_a_db,
                     checkIfExists: true
                 ),
-                file(
+                file (
                     params.transposon_keywords,
                     checkIfExists: true
                 ),
@@ -77,8 +77,8 @@ workflow {
                 params.protein_reference,
                 checkIfExists: true
             )
-            .splitFasta(by: 1000000000)   // Use high number to keep file intact
-            .collectFile(                 // Merge multiple fasta's into one
+            .splitFasta( by: 1000000000 )   // Use high number to keep file intact
+            .collectFile(                   // Merge multiple fasta's into one
                 name: 'protein_reference.fasta'
             )
         )
@@ -91,8 +91,8 @@ workflow {
         // Step 4: Scan Repeats for PFAM domains
         PFAM_SCAN (
             BLASTX_AND_FILTER.out.fasta,
-            Channel.fromPath(
-                [params.pfam_hmm_db, params.pfam_hmm_dat],
+            Channel.fromPath (
+                [ params.pfam_hmm_db, params.pfam_hmm_dat ],
                 checkIfExists: true
             ).collect()
         )
@@ -109,17 +109,27 @@ workflow {
         // Step 6: TREP Annotation
         BUILD_TREP_BLAST_DB (
             Channel.fromPath( params.trep_db, checkIfExists: true )
-            .splitFasta(by: 1000000000)   // Auto unzip and keep files fasta intact
+            .splitFasta( by: 1000000000 )   // Auto unzip and keep files fasta intact
             .collectFile(                 // Merge multiple fasta's into one
                 name: 'trep_db.fasta'
-            ) )
-        TREP_BLASTN ( ANNOTATE_REPEATS.out.fasta, BUILD_TREP_BLAST_DB.out.db )
-        ADD_TREP_ANNOTATION ( ANNOTATE_REPEATS.out.fasta, TREP_BLASTN.out.tsv ) // take Smallest e-value and rename with triplet added
+            )
+        )
+        TREP_BLASTN (
+            ANNOTATE_REPEATS.out.fasta,
+            BUILD_TREP_BLAST_DB.out.db
+        )
+        ADD_TREP_ANNOTATION (
+            ANNOTATE_REPEATS.out.fasta,
+            TREP_BLASTN.out.tsv
+        ) // take Smallest e-value and rename with triplet added
 
         // Step 7: Custom HMM search
         CUSTOM_HMM_SCAN (
             BLASTX_AND_FILTER.out.fasta,
-            Channel.fromPath( params.custom_hmms, checkIfExists: true ).collect()
+            Channel.fromPath(
+                params.custom_hmms,
+                checkIfExists: true
+            ).collect()
         )
         REANNOTATE_REPEATS (
             ANNOTATE_REPEATS.out.unclassified_with_te_domains,
@@ -128,7 +138,10 @@ workflow {
 
         // Step 8: Reciprocal blast
         BUILD_ANNOTATED_LIB_BLAST_DB ( REANNOTATE_REPEATS.out.fasta )
-        RECIPROCAL_BLASTN ( REANNOTATE_REPEATS.out.fasta, BUILD_ANNOTATED_LIB_BLAST_DB.out.db )
+        RECIPROCAL_BLASTN (
+            REANNOTATE_REPEATS.out.fasta, 
+            BUILD_ANNOTATED_LIB_BLAST_DB.out.db
+        )
         REDUNDANT_HITS ( RECIPROCAL_BLASTN.out.tsv )
         /*
 
