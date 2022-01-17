@@ -6,14 +6,15 @@ process REANNOTATE_REPEATS {
         'biocontainers/biocontainers:v1.2.0_cv1' }"
 
     input:
-    path repeat_library            // Renamed repeat consensus library
-    path pfam_table                // Pfam output (*.pfamtbl)
+    path unclassified_domain_table  // Renamed repeat consensus library
+    path hmmscan_domain_table       // hmmscan output (*.tbl + *.pfamtbl = *.domtbl )
 
     output:
-    path "*.fasta", emit: fasta
+    // path "*.fasta", emit: fasta
+    path "domain_table.tsv", emit: domain_table
 
     script:
     """
-    echo something
+    cat $unclassified_domain_table $hmmscan_domain_table > domain_table.tsv
     """
 }
