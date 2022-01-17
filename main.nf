@@ -137,12 +137,12 @@ workflow {
         )
 
         // Step 8: Reciprocal blast
-        BUILD_ANNOTATED_LIB_BLAST_DB ( REANNOTATE_REPEATS.out.fasta )
-        RECIPROCAL_BLASTN (
-            REANNOTATE_REPEATS.out.fasta,
-            BUILD_ANNOTATED_LIB_BLAST_DB.out.db
-        )
-        REDUNDANT_HITS ( RECIPROCAL_BLASTN.out.tsv )
+        // BUILD_ANNOTATED_LIB_BLAST_DB ( REANNOTATE_REPEATS.out.fasta )
+        // RECIPROCAL_BLASTN (
+        //     REANNOTATE_REPEATS.out.fasta,
+        //     BUILD_ANNOTATED_LIB_BLAST_DB.out.db
+        // )
+        // REDUNDANT_HITS ( RECIPROCAL_BLASTN.out.tsv )
         /*
     # The goal is to further annotate "*.renamed.fasta"
     ## Nucleotide identity search against TREP
