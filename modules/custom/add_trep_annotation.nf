@@ -20,6 +20,56 @@ process ADD_TREP_ANNOTATION {
     for example
     An Unknown sequence with positive hit to >DHH_Mpol_A_RND-1 would have
     a new annotation formatted as "* /DHH"
+    # Expected blast outfmt 6
+    # qseqid sseqid pident length mismatch gapopen qstart qend sstart send evalue bitscore
+    # Find queries ending in #Unknown and filter for smallest evalue
+
+    # Find hits with smallest e-value
+    awk 'BEGIN {
+            prev_seq = ''
+            prev_sfam = ''
+            prev_evalue = 0
+        }
+        \$1 ~ /#Unknown\$/ {
+            # If current sequence is the same as previous sequence name
+            # and evalue is smaller, update evalue
+            if ( \$1 == prev_seq && \$11 < prev_evalue ) {
+                prev_evalue = \$11
+            }
+            # If current sequence has a different name to previous, then
+            # print replacement info
+            if ( \$1 != prev_seq && prev_seq != '') {
+                print prev_seq "\\t" prev_sfam
+            }
+            prev_seq = \$1
+            prev_sfam = substr(\$2,1,3)
+        }
+        # Process last sequence.
+        END {
+            if ( prev_seq != '' ) {
+                print prev_seq "\\t" prev_sfam
+            }
+        }' $trep_blast_hits > best_hits.tsv
+
+    # Read in annotations to memory, and use dictionary
+    # to update fasta headers
+    awk '
+        # Load best_hits.tsv into dictionary
+        FNR == NR {
+            annotation[\$1] = \$2; next
+        }
+        # Update annotation
+        # If a line begins with >
+        # and an annotation to add exists.
+        /^>/ {
+            seq_head = substr(\$1,2)
+            if ( seq_head in annotation ) {
+                \$1 = \$1 "/" annotation[seq_head]
+            }
+        }
+        # print each line
+        1
+        ' best_hits.tsv $repeat_library
 
     """
 
