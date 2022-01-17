@@ -53,9 +53,9 @@ process HMMSCAN {
     #  15 <clan>              "-"
 
     join -1 1 -2 1 -o1.4,2.9,2.10,2.7,2.8,1.2,2.11,2.12,1.10,1.9 \
-        <( grep -v -e '^[[:space:]]*\$' -e '^#' "$hmmscan_table" | \
+        <( grep -v -e '^[[:space:]]*\$' -e '^#' "${prefix}.tbl" | \
             awk '{ print \$1"-"\$8"-"\$9" "\$0 } ' | sort -k1,1 ) \
-        <( grep -v -e '^[[:space:]]*\$' -e '^#' "$hmmscan_pfamtbl" | \
+        <( grep -v -e '^[[:space:]]*\$' -e '^#' "${prefix}.pfamtbl" | \
             awk 'NF > 10 { print \$1"-"\$3"-"\$2" "\$0 } ' | sort -k1,1 ) | \
         awk '{ \$5=\$5 "\\t-\\t"; \$6=\$6 "\\t-\\t"; \$8=\$8 "\\t-\\t"; \$10=\$10 "\\t1\\t-"; print \$0 }' \
         > ${prefix}.domtbl
