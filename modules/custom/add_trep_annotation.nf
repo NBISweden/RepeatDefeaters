@@ -10,25 +10,19 @@ process ADD_TREP_ANNOTATION {
     path trep_blast_hits           // TREP blast results ( *.blastn.tsv )
 
     output:
-    path "*", emit: annotated_hits
+    path ".trep.fasta", emit: fasta
 
     script:
+    def prefix = repeat_library.baseName
     """
-    # If any Unknown sequence in "*.renamed.fasta" generates positive hits then
-    # take the name of the hit with smallest evalue from trep.blastn.out
-    # First three letters of TREP sequences indicates the transposon superfamily,
-    # for example
-    # An Unknown sequence with positive hit to >DHH_Mpol_A_RND-1 would have
-    # a new annotation formatted as "* /DHH"
-
     # Expected blast outfmt 6
     # qseqid sseqid pident length mismatch gapopen qstart qend sstart send evalue bitscore
     # Find queries ending in #Unknown and filter for smallest evalue
 
     # Find hits with smallest e-value
     awk 'BEGIN {
-            prev_seq = ''
-            prev_sfam = ''
+            prev_seq = ""    # sequence name
+            prev_sfam = ""   # transposon superfamily
             prev_evalue = 0
         }
         \$1 ~ /#Unknown\$/ {
@@ -39,7 +33,7 @@ process ADD_TREP_ANNOTATION {
             }
             # If current sequence has a different name to previous, then
             # print replacement info
-            if ( \$1 != prev_seq && prev_seq != '') {
+            if ( \$1 != prev_seq && prev_seq != "") {
                 print prev_seq "\\t" prev_sfam
             }
             prev_seq = \$1
@@ -47,17 +41,18 @@ process ADD_TREP_ANNOTATION {
         }
         # Process last sequence.
         END {
-            if ( prev_seq != '' ) {
+            if ( prev_seq != "" ) {
                 print prev_seq "\\t" prev_sfam
             }
         }' $trep_blast_hits > best_hits.tsv
 
     # Read in annotations to memory, and use dictionary
-    # to update fasta headers
+    # to update fasta headers with transposon superfamily
     awk '
         # Load best_hits.tsv into dictionary
         FNR == NR {
-            annotation[\$1] = \$2; next
+            annotation[\$1] = \$2
+            next
         }
         # Update annotation
         # If a line begins with >
@@ -70,8 +65,7 @@ process ADD_TREP_ANNOTATION {
         }
         # print each line
         1
-        ' best_hits.tsv $repeat_library
-
+        ' best_hits.tsv $repeat_library > ${prefix}.trep.fasta
     """
 
 }
