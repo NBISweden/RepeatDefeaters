@@ -14,12 +14,13 @@ process ADD_TREP_ANNOTATION {
 
     script:
     """
-    If any Unknown sequence in "*.renamed.fasta" generates positive hits then
-    take the name of the hit with smallest evalue from trep.blastn.out
-    First three letters of TREP sequences indicates the transposon superfamily,
-    for example
-    An Unknown sequence with positive hit to >DHH_Mpol_A_RND-1 would have
-    a new annotation formatted as "* /DHH"
+    # If any Unknown sequence in "*.renamed.fasta" generates positive hits then
+    # take the name of the hit with smallest evalue from trep.blastn.out
+    # First three letters of TREP sequences indicates the transposon superfamily,
+    # for example
+    # An Unknown sequence with positive hit to >DHH_Mpol_A_RND-1 would have
+    # a new annotation formatted as "* /DHH"
+
     # Expected blast outfmt 6
     # qseqid sseqid pident length mismatch gapopen qstart qend sstart send evalue bitscore
     # Find queries ending in #Unknown and filter for smallest evalue
