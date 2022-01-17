@@ -133,17 +133,40 @@ workflow {
         )
         REANNOTATE_REPEATS (
             ANNOTATE_REPEATS.out.unclassified_with_te_domains,
-            CUSTOM_HMM_SCAN.out.pfam_table.collect()
+            CUSTOM_HMM_SCAN.out.domain_table.collect()
         )
 
         // Step 8: Reciprocal blast
         BUILD_ANNOTATED_LIB_BLAST_DB ( REANNOTATE_REPEATS.out.fasta )
         RECIPROCAL_BLASTN (
-            REANNOTATE_REPEATS.out.fasta, 
+            REANNOTATE_REPEATS.out.fasta,
             BUILD_ANNOTATED_LIB_BLAST_DB.out.db
         )
         REDUNDANT_HITS ( RECIPROCAL_BLASTN.out.tsv )
         /*
+    # The goal is to further annotate "*.renamed.fasta"
+    ## Nucleotide identity search against TREP
+    wget http://botserv2.uzh.ch/kelldata/trep-db/downloads/trep-db_nr_Rel-19.fasta.gz
+    gunzip trep-db_nr_Rel-19.fasta.gz
+    makeblastdb -in trep-db_nr_Rel-19.fasta -dbtype nucl
+    blastn -db trep-db_nr_Rel-19.fasta -num_threads 8  -query "*.renamed.fasta" -outfmt 6 > trep.blastn.out
+
+    ### If any Unknown sequence in "*.renamed.fasta" generates positive hits then
+    ### take the name of the hit with smallest evalue from trep.blastn.out
+    ### First three letters of TREP sequences indicates the transposon superfamily,
+    ### for example
+    ### An Unknown sequence with positive hit to >DHH_Mpol_A_RND-1 would have
+    ### a new annotation formatted as "* /DHH"
+
+    ## Custom HMM search
+    ### INPUT: *.{plus,minus}.predicted.fasta from 03_Blastx
+    pfam_scan.pl -fasta INPUT -dir Libraries/HMMs/ -outfile $INPUT.pfamtbl -e_seq 0.001
+    ### Concatenate two $INPUT.pfamtbl output files with
+    ### *.Unclassified_consensus_TEs from "05_Reannotated_Repeat_modeler_sequences".
+    ### Unknown consensus sequences get annotated based on
+    ### their best hit in the concatenated table. HMM best hits inherit HMM names.
+    ### Pfam best hits inherit Pfam domain names similar to 05_Reannotated_Repeat_modeler_sequences
+    ### THIS IS THE FINAL ANNOTATED LIBRARY.
 
     Custom HMM search
         INPUT: *.{plus,minus}.predicted.fasta from 03_Blastx
@@ -166,6 +189,19 @@ workflow {
         -outfmt "6 qseqid qlen sseqid slen length nident evalue"|
         grep Unknown|awk 'NR>=1{$8=($6)/($2)}1'|
         awk '$8>0.6'|awk '$1!=$3'|awk '!a[$5$6]++' > self.comparison
+
+    ## Show redundancy in the annotated library using blastn
+    ### make database
+    makeblastdb -in FINAL-ANNOTATED-LIBRARY -dbtype nucl
+    ### Define custom output format. For queries and subjects that are both Unknown
+    ### Get total matched bases/query length, which indicates the coverage of an overlap
+    ### Filter coverage using 0.6 as cut-off then dedup
+    blastn -db FINAL-ANNOTATED-LIBRARY
+    -query FINAL-ANNOTATED-LIBRARY
+    -outfmt "6 qseqid qlen sseqid slen length nident evalue"|
+    grep Unknown|awk 'NR>=1{$8=($6)/($2)}1'|
+    awk '$8>0.6'|awk '$1!=$3'|awk '!a[$5$6]++' > self.comparison
+
 
         */
 
