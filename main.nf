@@ -11,6 +11,7 @@ include { MAKE_BLAST_DB as BUILD_PROTEIN_REF_BLAST_DB ;
 include { BLASTX_AND_FILTER                                   } from './modules/custom/blastx_and_filter'
 include { PFAM_SCAN                                           } from './modules/custom/pfam_scan'
 include { HMMSCAN as CUSTOM_HMM_SCAN                          } from './modules/custom/hmmscan'
+include { MERGE_DOMAIN_TABLE                                  } from './modules/custom/merge_domain_table'
 include { ANNOTATE_REPEATS                                    } from './modules/custom/annotate_repeats'
 include { BLASTN as TREP_BLASTN ;
           BLASTN as RECIPROCAL_BLASTN                         } from './modules/custom/blastn'
@@ -131,9 +132,12 @@ workflow {
                 checkIfExists: true
             ).collect()
         )
+        MERGE_DOMAIN_TABLE (
+            CUSTOM_HMM_SCAN.out.hmmscan_tables
+        )
         REANNOTATE_REPEATS (
             ANNOTATE_REPEATS.out.unclassified_with_te_domains,
-            CUSTOM_HMM_SCAN.out.domain_table.collect()
+            MERGE_DOMAIN_TABLE.out.domain_table.collect()
         )
 
         // Step 8: Reciprocal blast
@@ -144,19 +148,6 @@ workflow {
         // )
         // REDUNDANT_HITS ( RECIPROCAL_BLASTN.out.tsv )
         /*
-    # The goal is to further annotate "*.renamed.fasta"
-    ## Nucleotide identity search against TREP
-    wget http://botserv2.uzh.ch/kelldata/trep-db/downloads/trep-db_nr_Rel-19.fasta.gz
-    gunzip trep-db_nr_Rel-19.fasta.gz
-    makeblastdb -in trep-db_nr_Rel-19.fasta -dbtype nucl
-    blastn -db trep-db_nr_Rel-19.fasta -num_threads 8  -query "*.renamed.fasta" -outfmt 6 > trep.blastn.out
-
-    ### If any Unknown sequence in "*.renamed.fasta" generates positive hits then
-    ### take the name of the hit with smallest evalue from trep.blastn.out
-    ### First three letters of TREP sequences indicates the transposon superfamily,
-    ### for example
-    ### An Unknown sequence with positive hit to >DHH_Mpol_A_RND-1 would have
-    ### a new annotation formatted as "* /DHH"
 
     ## Custom HMM search
     ### INPUT: *.{plus,minus}.predicted.fasta from 03_Blastx
