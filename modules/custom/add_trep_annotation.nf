@@ -10,7 +10,7 @@ process ADD_TREP_ANNOTATION {
     path trep_blast_hits           // TREP blast results ( *.blastn.tsv )
 
     output:
-    path ".trep.fasta", emit: fasta
+    path "*.trep.fasta", emit: fasta
 
     script:
     def prefix = repeat_library.baseName
