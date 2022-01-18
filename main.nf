@@ -67,7 +67,7 @@ workflow {
                 )
             )
             protein_te_domain_list = PFAM_TRANSPOSIBLE_ELEMENT_SEARCH.out.te_domain_proteins
-            versions_ch = PFAM_TRANSPOSIBLE_ELEMENT_SEARCH.out.versions.first()
+            versions_ch = PFAM_TRANSPOSIBLE_ELEMENT_SEARCH.out.versions
         }
 
         // Step 3: Strand specific Blast search of Repeats against
@@ -121,7 +121,7 @@ workflow {
         ADD_TREP_ANNOTATION (
             ANNOTATE_REPEATS.out.fasta,
             TREP_BLASTN.out.tsv
-        ) // take Smallest e-value and rename with triplet added
+        ) // take Smallest e-value and rename with transposon superfamily added
 
         // Step 7: Custom HMM search
         CUSTOM_HMM_SCAN (
@@ -207,11 +207,11 @@ workflow {
 
         // Report: Record software versions
         versions_ch.mix(
-            RENAME_REPEAT_MODELER_SEQUENCES.out.versions.first(),
-            BUILD_PROTEIN_REF_BLAST_DB.out.versions.first(),
+            RENAME_REPEAT_MODELER_SEQUENCES.out.versions,
+            BUILD_PROTEIN_REF_BLAST_DB.out.versions,
             BLASTX_AND_FILTER.out.versions.first(),
             PFAM_SCAN.out.versions.first(),
-            ANNOTATE_REPEATS.out.versions.first()
+            ANNOTATE_REPEATS.out.versions
         ).collectFile(
             name: "software_versions.yml",
             cache: false,
