@@ -46,26 +46,30 @@ process ADD_TREP_ANNOTATION {
             }
         }' $trep_blast_hits > best_hits.tsv
 
-    # Read in annotations to memory, and use dictionary
-    # to update fasta headers with transposon superfamily
-    awk '
-        # Load best_hits.tsv into dictionary
-        FNR == NR {
-            annotation[\$1] = \$2
-            next
-        }
-        # Update annotation
-        # If a line begins with >
-        # and an annotation to add exists.
-        /^>/ {
-            seq_head = substr(\$1,2)
-            if ( seq_head in annotation ) {
-                \$1 = \$1 "/" annotation[seq_head]
+    if [ -s best_hits.tsv ]; then
+        # Read in annotations to memory, and use dictionary
+        # to update fasta headers with transposon superfamily
+        awk '
+            # Load best_hits.tsv into dictionary
+            FNR == NR {
+                annotation[\$1] = \$2
+                next
             }
-        }
-        # print each line
-        1
-        ' best_hits.tsv $repeat_library > ${prefix}.trep.fasta
+            # Update annotation
+            # If a line begins with >
+            # and an annotation to add exists.
+            /^>/ {
+                seq_head = substr(\$1,2)
+                if ( seq_head in annotation ) {
+                    \$1 = \$1 "/" annotation[seq_head]
+                }
+            }
+            # print each line
+            1
+            ' best_hits.tsv $repeat_library > ${prefix}.trep.fasta
+    else
+        cp $repeat_library ${prefix}.trep.fasta
+    fi
     """
 
 }
