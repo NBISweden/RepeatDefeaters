@@ -6,15 +6,88 @@ process REANNOTATE_REPEATS {
         'biocontainers/biocontainers:v1.2.0_cv1' }"
 
     input:
-    path unclassified_domain_table  // Renamed repeat consensus library
+    path repeat_library             // Renamed repeat consensus library
+    path unclassified_domain_table  // Pfam A unclassifed output
     path hmmscan_domain_table       // hmmscan output (*.tbl + *.pfamtbl = *.domtbl )
 
     output:
-    // path "*.fasta", emit: fasta
+    path "*_reannotated.fasta"         , emit: fasta
     path "domain_table.tsv", emit: domain_table
 
     script:
+    def prefix = repeat_library.baseName
     """
-    cat $unclassified_domain_table $hmmscan_domain_table > domain_table.tsv
+    #! /usr/bin/env python
+
+    import os
+    import re
+
+    superfamily = [ 'Academ', 'CACTA', 'DIRS', 'Ginger', 'Harbinger', 'Helitron', 'Kolobok', 'MULE', 'Mariner', 'Merlin', 'Novosib', 'P', 'Piggybac', 'Sola1', 'Sola2', 'Sola3', 'Transib', 'Zator']
+
+    # domain_table format
+    # col field
+    #   1 <seq id>
+    #   2 <alignment start>
+    #   3 <alignment end>
+    #   4 <envelope start>
+    #   5 <envelope end>
+    #   6 <hmm acc>
+    #   7 <hmm name>
+    #   8 <type>
+    #   9 <hmm start>
+    #  10 <hmm end>
+    #  11 <hmm length>
+    #  12 <bit score>
+    #  13 <E-value>
+    #  14 <significance>
+    #  15 <clan>
+
+    header_lines = {}
+    # Concatenate the domain table and cut out relevant columns
+    with os.popen( "cat $hmmscan_domain_table $unclassified_domain_table | tee domain_table.tsv | cut -f1,7,12 " ) as domain_table:
+        for line in domain_table:
+            cols = line.split()
+            # e.g. cclaro4-779#Unknown_minus_qseq_1(/XXX)?
+            header = cols[0]
+            # PARA-PROT.uniq.fasta -> PARA-PROT
+            hit = cols[1].partition('.')[0]
+            # bitscore
+            score = cols[2]
+            if header in header_lines:
+                if "concat" in header_lines[header]:
+                    header_lines[header]["concat"] += "-" + hit
+                else:
+                    header_lines[header]["concat"] = hit
+                if "best_hit" in header_lines[header]:
+                    if score > header_lines[header]["best_hit_score"]:
+                        header_lines[header]["best_hit_score"] = score
+                        header_lines[header]["best_hit"] = hit
+                else:
+                    header_lines[header]["best_hit_score"] = score
+                    header_lines[header]["best_hit"] = hit
+
+    with open("$repeat_library", "r") as repeat_lib:
+        with open("${prefix}_reannotated.fasta", "w") as renamed_repeats:
+            for line in repeat_lib:
+                # Get lines matching header e.g., cclaro4-1265#Unknown(/XXX)
+                line_match = re.match('^>(.+#Unknown)(/[A-Z]{3})?$', line)
+                if line_match:
+                    # Update header and print to file
+                    # Scan keys for matching substring
+                    for key in header_lines:
+                        header_key = re.search(line_match.groups(1), key)
+                        if header_key:
+                            # if best hit is superfamily use that, otherwise use concat
+                            if header_lines[key]["best_hit"] in superfamily:
+                                # Write superfamily name
+                                header = ">" + key.partition("#Unknown")[0] + "#" + header_lines[key]["best_hit"] + line_match.groups(2)
+                                renamed_repeats.write(header)
+                            else:
+                                # Write concatenation of names
+                                header = ">" + key.partition("#Unknown")[0] + "#" + header_lines[key]["concat"] + line_match.groups(2)
+                                renamed_repeats.write(header)
+                else:
+                    # print to file
+                    renamed_repeats.write(line)
     """
 }
