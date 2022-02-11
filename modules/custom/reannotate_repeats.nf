@@ -70,7 +70,7 @@ process REANNOTATE_REPEATS {
         with open("${prefix}_reannotated.fasta", "w") as renamed_repeats:
             for line in repeat_lib:
                 # Get lines matching header e.g., cclaro4-1265#Unknown(/XXX)
-                line_match = re.match('^>(.+#Unknown)(/[A-Z]{3})?$', line)
+                line_match = re.match('^>(.+#Unknown)(/[A-Z]{3})?\$', line)
                 if line_match:
                     # Update header and print to file
                     # Scan keys for matching substring
