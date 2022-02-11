@@ -136,6 +136,7 @@ workflow {
             CUSTOM_HMM_SCAN.out.hmmscan_tables
         )
         REANNOTATE_REPEATS (
+            ADD_TREP_ANNOTATION.out.fasta,
             ANNOTATE_REPEATS.out.unclassified_with_te_domains,
             MERGE_DOMAIN_TABLE.out.domain_table.collect()
         )
