@@ -99,14 +99,14 @@ process REANNOTATE_REPEATS {
                 # Get lines matching header e.g., cclaro4-1265#Unknown(/XXX)
                 line_match = re.match("^>(.+#Unknown)(/[A-Z]{3})?\$", line)
                 if line_match:
-                    print "Old header: " + line_match.groups(0)
+                    print "Old header: " + line_match.group(0)
 
                     # Update header and print to file
                     # Scan keys for matching substring
                     try:
                         key_found = None
                         for key in header_lines:
-                            header_key = re.search(line_match.groups(1), key)
+                            header_key = re.search(line_match.group(1), key)
                             if header_key:
                                 if key_found:
                                     raise Exception('Multiple matching keys found for header line')
@@ -120,7 +120,7 @@ process REANNOTATE_REPEATS {
                                         + key.partition("#Unknown")[0]
                                         + "#"
                                         + header_lines[key]["best_hit"]
-                                        + line_match.groups(2)
+                                        + line_match.group(2)
                                     )
                                     renamed_repeats.write(header)
                                     print "New header: " + header
@@ -131,7 +131,7 @@ process REANNOTATE_REPEATS {
                                         + key.partition("#Unknown")[0]
                                         + "#"
                                         + header_lines[key]["concat"]
-                                        + line_match.groups(2)
+                                        + line_match.group(2)
                                     )
                                     renamed_repeats.write(header)
                                     print "New header: " + header
