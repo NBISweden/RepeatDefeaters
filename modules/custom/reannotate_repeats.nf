@@ -22,7 +22,26 @@ process REANNOTATE_REPEATS {
     import os
     import re
 
-    superfamily = [ 'Academ', 'CACTA', 'DIRS', 'Ginger', 'Harbinger', 'Helitron', 'Kolobok', 'MULE', 'Mariner', 'Merlin', 'Novosib', 'P', 'Piggybac', 'Sola1', 'Sola2', 'Sola3', 'Transib', 'Zator']
+    superfamily = [
+        "Academ",
+        "CACTA",
+        "DIRS",
+        "Ginger",
+        "Harbinger",
+        "Helitron",
+        "Kolobok",
+        "MULE",
+        "Mariner",
+        "Merlin",
+        "Novosib",
+        "P",
+        "Piggybac",
+        "Sola1",
+        "Sola2",
+        "Sola3",
+        "Transib",
+        "Zator"
+    ]
 
     # domain_table format
     # col field
@@ -44,13 +63,15 @@ process REANNOTATE_REPEATS {
 
     header_lines = {}
     # Concatenate the domain table and cut out relevant columns
-    with os.popen( "cat $hmmscan_domain_table $unclassified_domain_table | tee domain_table.tsv | cut -f1,7,12 " ) as domain_table:
+    with os.popen(
+        "cat $hmmscan_domain_table $unclassified_domain_table | tee domain_table.tsv | cut -f1,7,12 "
+    ) as domain_table:
         for line in domain_table:
             cols = line.split()
             # e.g. cclaro4-779#Unknown_minus_qseq_1(/XXX)?
             header = cols[0]
             # PARA-PROT.uniq.fasta -> PARA-PROT
-            hit = cols[1].partition('.')[0]
+            hit = cols[1].partition(".")[0]
             # bitscore
             score = cols[2]
             if header in header_lines:
@@ -70,7 +91,7 @@ process REANNOTATE_REPEATS {
         with open("${prefix}_reannotated.fasta", "w") as renamed_repeats:
             for line in repeat_lib:
                 # Get lines matching header e.g., cclaro4-1265#Unknown(/XXX)
-                line_match = re.match('^>(.+#Unknown)(/[A-Z]{3})?\$', line)
+                line_match = re.match("^>(.+#Unknown)(/[A-Z]{3})?\$", line)
                 if line_match:
                     # Update header and print to file
                     # Scan keys for matching substring
@@ -80,11 +101,23 @@ process REANNOTATE_REPEATS {
                             # if best hit is superfamily use that, otherwise use concat
                             if header_lines[key]["best_hit"] in superfamily:
                                 # Write superfamily name
-                                header = ">" + key.partition("#Unknown")[0] + "#" + header_lines[key]["best_hit"] + line_match.groups(2)
+                                header = (
+                                    ">"
+                                    + key.partition("#Unknown")[0]
+                                    + "#"
+                                    + header_lines[key]["best_hit"]
+                                    + line_match.groups(2)
+                                )
                                 renamed_repeats.write(header)
                             else:
                                 # Write concatenation of names
-                                header = ">" + key.partition("#Unknown")[0] + "#" + header_lines[key]["concat"] + line_match.groups(2)
+                                header = (
+                                    ">"
+                                    + key.partition("#Unknown")[0]
+                                    + "#"
+                                    + header_lines[key]["concat"]
+                                    + line_match.groups(2)
+                                )
                                 renamed_repeats.write(header)
                 else:
                     # print to file
