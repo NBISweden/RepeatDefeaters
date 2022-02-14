@@ -66,30 +66,29 @@ process REANNOTATE_REPEATS {
 
     # Concatenate the domain table and cut out relevant columns
     with os.popen(
-        "cat $hmmscan_domain_table $unclassified_domain_table | tee domain_table.tsv | cut -f1,7,12 "
+        'cat $hmmscan_domain_table $unclassified_domain_table | tee domain_table.tsv | awk \\'{ print \\\$1 "\\t" \\\$7 "\\t" \\\$12 }\\''
     ) as domain_table:
 
         # Parse domain table to form a lookup table.
         for line in domain_table:
             cols = line.split()
-            header = cols[0]                  # e.g. cclaro4-779#Unknown_minus_qseq_1(/XXX)?
-            hit = cols[1].partition(".")[0]   # PARA-PROT.uniq.fasta -> PARA-PROT
-            score = cols[2]                   # bitscore
+            header = re.split("_(plus|minus)", cols[0])[
+                0
+            ]  # e.g. cclaro4-779#Unknown_minus_qseq_1
+            hit = cols[1].partition(".")[0]  # PARA-PROT.uniq.fasta -> PARA-PROT
+            score = cols[2]  # bitscore
+            print("Lookup: " + header + " : " + hit + " : " + score)
 
             # make entries for both concatenated names and best hit for each header
             if header in header_lines:
-                if "concat" in header_lines[header]:
-                    header_lines[header]["concat"] += "-" + hit
-                else:
-                    header_lines[header]["concat"] = hit
-                if "best_hit" in header_lines[header]:
-                    if score > header_lines[header]["best_hit_score"]:
-                        header_lines[header]["best_hit_score"] = score
-                        header_lines[header]["best_hit"] = hit
-                else:
+                header_lines[header]["concat"].add(hit)
+                if score < header_lines[header]["best_hit_score"]:
                     header_lines[header]["best_hit_score"] = score
                     header_lines[header]["best_hit"] = hit
-
+            else:
+                header_lines.setdefault(header, {})["concat"] = {hit}
+                header_lines[header]["best_hit_score"] = score
+                header_lines[header]["best_hit"] = hit
 
     # Iterate over repeat library and update header information
     with open("$repeat_library", "r") as repeat_lib:
@@ -99,50 +98,49 @@ process REANNOTATE_REPEATS {
                 # Get lines matching header e.g., cclaro4-1265#Unknown(/XXX)
                 line_match = re.match("^>(.+#Unknown)(/[A-Z]{3})?\$", line)
                 if line_match:
-                    print "Old header: " + line_match.group(0)
+                    print("Old header: " + line_match.group(0))
 
                     # Update header and print to file
                     # Scan keys for matching substring
-                    try:
-                        key_found = None
-                        for key in header_lines:
-                            header_key = re.search(line_match.group(1), key)
-                            if header_key:
-                                if key_found:
-                                    raise Exception('Multiple matching keys found for header line')
-                                key_found = key
+                    key_found = None
+                    for key in header_lines:
+                        header_key = re.search(line_match.group(1), key)
+                        if header_key:
+                            key_found = key  # matches updated to be unique key
 
-                                # if best hit is superfamily use that, otherwise use concat
-                                if header_lines[key]["best_hit"] in superfamily:
-                                    # Write superfamily name
-                                    header = (
-                                        ">"
-                                        + key.partition("#Unknown")[0]
-                                        + "#"
-                                        + header_lines[key]["best_hit"]
-                                        + line_match.group(2)
+                            # if best hit is superfamily use that, otherwise use concat
+                            if header_lines[key]["best_hit"] in superfamily:
+                                # Write superfamily name
+                                header = (
+                                    ">"
+                                    + key.partition("#Unknown")[0]
+                                    + "#"
+                                    + header_lines[key]["best_hit"]
+                                    + str(line_match.group(2) or "")
+                                )
+                                renamed_repeats.write(header + "\\n")
+                                print("New header: " + header)
+                            else:
+                                # Write concatenation of names
+                                header = (
+                                    ">"
+                                    + key.partition("#Unknown")[0]
+                                    + "#"
+                                    + "-".join(
+                                        [
+                                            str(hmm)
+                                            for hmm in header_lines[key]["concat"]
+                                        ]
                                     )
-                                    renamed_repeats.write(header)
-                                    print "New header: " + header
-                                else:
-                                    # Write concatenation of names
-                                    header = (
-                                        ">"
-                                        + key.partition("#Unknown")[0]
-                                        + "#"
-                                        + header_lines[key]["concat"]
-                                        + line_match.group(2)
-                                    )
-                                    renamed_repeats.write(header)
-                                    print "New header: " + header
+                                    + str(line_match.group(2) or "")
+                                )
+                                renamed_repeats.write(header + "\\n")
+                                print("New header: " + header)
 
-                        # If header is unmatched, write out header again.
-                        if not key_found:
-                            renamed_repeats.write(line)
-                            print "No match"
-
-                    except Exception as error:
-                        print(error)
+                    # If header is unmatched, write out header again.
+                    if not key_found:
+                        renamed_repeats.write(line)
+                        print("No match")
 
                 else:
                     # print to file
