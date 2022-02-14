@@ -66,7 +66,7 @@ process REANNOTATE_REPEATS {
 
     # Concatenate the domain table and cut out relevant columns
     with os.popen(
-        'cat $hmmscan_domain_table $unclassified_domain_table | tee domain_table.tsv | awk \\'{ print \\\$1 "\\t" \\\$7 "\\t" \\\$12 }\\''
+        'cat $hmmscan_domain_table $unclassified_domain_table | tee domain_table.tsv | awk \\'{ print \$1 "\\t" \$7 "\\t" \$12 }\\''
     ) as domain_table:
 
         # Parse domain table to form a lookup table.
