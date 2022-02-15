@@ -11,8 +11,8 @@ process REANNOTATE_REPEATS {
     path hmmscan_domain_table       // hmmscan output (*.tbl + *.pfamtbl = *.domtbl )
 
     output:
-    path "*_reannotated.fasta"         , emit: fasta
-    path "domain_table.tsv", emit: domain_table
+    path "*_reannotated.fasta", emit: fasta
+    path "domain_table.tsv"   , emit: domain_table
 
     script:
     def prefix = repeat_library.baseName
@@ -21,6 +21,7 @@ process REANNOTATE_REPEATS {
 
     import os
     import re
+    import platform
 
     # Checklist determines if an annotation uses multiple hits or superfamily name
     superfamily = [
@@ -127,10 +128,7 @@ process REANNOTATE_REPEATS {
                                     + key.partition("#Unknown")[0]
                                     + "#"
                                     + "-".join(
-                                        [
-                                            str(hmm)
-                                            for hmm in header_lines[key]["concat"]
-                                        ]
+                                        [str(hmm) for hmm in header_lines[key]["concat"]]
                                     )
                                     + str(line_match.group(2) or "")
                                 )
@@ -145,5 +143,12 @@ process REANNOTATE_REPEATS {
                 else:
                     # print to file
                     renamed_repeats.write(line)
+
+    with open("versions.yml","w") as versions:
+        versions.write(
+            "\\"${task.process}\\":\\n"
+            + "    python: "
+            + platform.python_version()
+        )
     """
 }
