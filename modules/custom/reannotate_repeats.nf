@@ -146,6 +146,6 @@ process REANNOTATE_REPEATS {
                     renamed_repeats.write(line)
 
     with open("versions.yml","w") as versions:
-        versions.write('"${task.process}":\\n    python: ' + platform.python_version())
+        versions.write('"${task.process}":\\n    python: ' + platform.python_version() + '\\n')
     """
 }

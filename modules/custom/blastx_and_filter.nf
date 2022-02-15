@@ -49,7 +49,7 @@ process BLASTX_AND_FILTER {
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
         blastx: \$( blastx -version | sed -e '/^blastx:/!d; s/^.*blastx: //' )
-        awk   : \$( awk |& sed '!1 d; s/(.*//' )
+        awk   : \$( awk |& sed '1!d; s/.*\\(v[0-9]\\+\\.[0-9]\\+\\.[0-9]\\+\\).*/\\1/' )
     END_VERSIONS
     """
 
