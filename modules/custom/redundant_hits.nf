@@ -9,18 +9,27 @@ process REDUNDANT_HITS {
     path blast_tsv
 
     output:
-    path "*.tsv", emit: tsv
+    path "self_comparison.tsv", emit: tsv
 
     script:
     """
-    grep Unknown $blast_tsv | \
-        awk ' NR >= 1 {
+    # Show redundancy in the annotated library
+    ## For queries and subjects that are both Unknown
+    ## Get total matched bases/query length, which
+    ## indicates the coverage of an overlap
+    ## Filter coverage using 0.6 as cut-off then dedup
+    grep Unknown $blast_tsv | \\
+        awk 'NR >= 1 {
             \$8=(\$6)/(\$2)
         }
-        1
-        \$8 > 0.6
-        \$1 != \$3
-        !a[\$5\$6]++
-        ' > self_comparison.tsv
+        \$8 > 0.6 && \$1 != \$3 && !a[\$5\$6]++ {
+            print \$0
+        }' > self_comparison.tsv
+
+    cat <<-END_VERSIONS > versions.yml
+    "${task.process}":
+        grep : \$( grep  --version |& head -n1 )
+        awk  : \$( awk  -W version |& head -n1 )
+    END_VERSIONS
     """
 }
