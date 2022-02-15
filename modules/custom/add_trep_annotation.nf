@@ -11,6 +11,7 @@ process ADD_TREP_ANNOTATION {
 
     output:
     path "*.trep.fasta", emit: fasta
+    path "versions.yml", emit: versions
 
     script:
     def prefix = repeat_library.baseName
@@ -70,6 +71,11 @@ process ADD_TREP_ANNOTATION {
     else
         cp $repeat_library ${prefix}.trep.fasta
     fi
+
+    cat <<-END_VERSIONS > versions.yml
+    "${task.process}":
+        awk  : \$( awk  -W version |& head -n1 )
+    END_VERSIONS
     """
 
 }
