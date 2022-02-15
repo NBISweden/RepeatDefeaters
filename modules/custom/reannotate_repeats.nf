@@ -13,6 +13,7 @@ process REANNOTATE_REPEATS {
     output:
     path "*_reannotated.fasta", emit: fasta
     path "domain_table.tsv"   , emit: domain_table
+    path "versions.yml"       , emit: versions
 
     script:
     def prefix = repeat_library.baseName
@@ -145,10 +146,6 @@ process REANNOTATE_REPEATS {
                     renamed_repeats.write(line)
 
     with open("versions.yml","w") as versions:
-        versions.write(
-            "\\"${task.process}\\":\\n"
-            + "    python: "
-            + platform.python_version()
-        )
+        versions.write('"${task.process}":\\n    python: ' + platform.python_version())
     """
 }

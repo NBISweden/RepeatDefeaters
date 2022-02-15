@@ -10,6 +10,7 @@ process REDUNDANT_HITS {
 
     output:
     path "self_comparison.tsv", emit: tsv
+    path "versions.yml"       , emit: versions
 
     script:
     """
