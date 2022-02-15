@@ -142,60 +142,12 @@ workflow {
         )
 
         // Step 8: Reciprocal blast
-        // BUILD_ANNOTATED_LIB_BLAST_DB ( REANNOTATE_REPEATS.out.fasta )
-        // RECIPROCAL_BLASTN (
-        //     REANNOTATE_REPEATS.out.fasta,
-        //     BUILD_ANNOTATED_LIB_BLAST_DB.out.db
-        // )
-        // REDUNDANT_HITS ( RECIPROCAL_BLASTN.out.tsv )
-        /*
-
-    ## Custom HMM search
-    ### INPUT: *.{plus,minus}.predicted.fasta from 03_Blastx
-    pfam_scan.pl -fasta INPUT -dir Libraries/HMMs/ -outfile $INPUT.pfamtbl -e_seq 0.001
-    ### Concatenate two $INPUT.pfamtbl output files with
-    ### *.Unclassified_consensus_TEs from "05_Reannotated_Repeat_modeler_sequences".
-    ### Unknown consensus sequences get annotated based on
-    ### their best hit in the concatenated table. HMM best hits inherit HMM names.
-    ### Pfam best hits inherit Pfam domain names similar to 05_Reannotated_Repeat_modeler_sequences
-    ### THIS IS THE FINAL ANNOTATED LIBRARY.
-
-    Custom HMM search
-        INPUT: *.{plus,minus}.predicted.fasta from 03_Blastx
-        pfam_scan.pl -fasta INPUT -dir Libraries/HMMs/ -outfile $INPUT.pfamtbl -e_seq 0.001
-        Concatenate two $INPUT.pfamtbl output files with
-        *.Unclassified_consensus_TEs from "05_Reannotated_Repeat_modeler_sequences".
-        Unknown consensus sequences get annotated based on
-        their best hit in the concatenated table. HMM best hits inherit HMM names.
-        Pfam best hits inherit Pfam domain names similar to 05_Reannotated_Repeat_modeler_sequences
-        THIS IS THE FINAL ANNOTATED LIBRARY.
-
-    Show redundancy in the annotated library using blastn
-        make database
-        makeblastdb -in FINAL-ANNOTATED-LIBRARY -dbtype nucl
-        Define custom output format. For queries and subjects that are both Unknown
-        Get total matched bases/query length, which indicates the coverage of an overlap
-        Filter coverage using 0.6 as cut-off then dedup
-        blastn -db FINAL-ANNOTATED-LIBRARY
-        -query FINAL-ANNOTATED-LIBRARY
-        -outfmt "6 qseqid qlen sseqid slen length nident evalue"|
-        grep Unknown|awk 'NR>=1{$8=($6)/($2)}1'|
-        awk '$8>0.6'|awk '$1!=$3'|awk '!a[$5$6]++' > self.comparison
-
-    ## Show redundancy in the annotated library using blastn
-    ### make database
-    makeblastdb -in FINAL-ANNOTATED-LIBRARY -dbtype nucl
-    ### Define custom output format. For queries and subjects that are both Unknown
-    ### Get total matched bases/query length, which indicates the coverage of an overlap
-    ### Filter coverage using 0.6 as cut-off then dedup
-    blastn -db FINAL-ANNOTATED-LIBRARY
-    -query FINAL-ANNOTATED-LIBRARY
-    -outfmt "6 qseqid qlen sseqid slen length nident evalue"|
-    grep Unknown|awk 'NR>=1{$8=($6)/($2)}1'|
-    awk '$8>0.6'|awk '$1!=$3'|awk '!a[$5$6]++' > self.comparison
-
-
-        */
+        BUILD_ANNOTATED_LIB_BLAST_DB ( REANNOTATE_REPEATS.out.fasta )
+        RECIPROCAL_BLASTN (
+            REANNOTATE_REPEATS.out.fasta,
+            BUILD_ANNOTATED_LIB_BLAST_DB.out.db
+        )
+        REDUNDANT_HITS ( RECIPROCAL_BLASTN.out.tsv )
 
         // Report: Record software versions
         versions_ch.mix(
@@ -203,7 +155,16 @@ workflow {
             BUILD_PROTEIN_REF_BLAST_DB.out.versions,
             BLASTX_AND_FILTER.out.versions.first(),
             PFAM_SCAN.out.versions.first(),
-            ANNOTATE_REPEATS.out.versions
+            ANNOTATE_REPEATS.out.versions,
+            BUILD_TREP_BLAST_DB.out.versions,
+            TREP_BLASTN.out.versions,
+            ADD_TREP_ANNOTATION.out.versions,
+            CUSTOM_HMM_SCAN.out.versions.first(),
+            MERGE_DOMAIN_TABLE.out.versions.first(),
+            REANNOTATE_REPEATS.out.versions,
+            BUILD_ANNOTATED_LIB_BLAST_DB.out.versions,
+            RECIPROCAL_BLASTN.out.versions,
+            REDUNDANT_HITS.out.versions
         ).collectFile(
             name: "software_versions.yml",
             cache: false,
